@@ -69,9 +69,10 @@ class VerticalLayout implements LayoutManager
 
 public class Main {
 
+
     private static String jt_str_begin = "S", jt_str_numb, jt_str_nume;
     private static int num_begin, num_end;
-    private static String[] simbol = {"S", "A", "B", "C", "N", "D", "E", "F", "G", "H", "J"};
+    private static String[] simbol = {"S", "A", "B", "C", "N", "D", "E", "F", "G", "H", "J", "P","W"};
     private static ArrayList<String> str_temp_term = new ArrayList<>();
     private static ArrayList<String> str_temp_noterm = new ArrayList<>();
     private static ArrayList<String> str_Temp_noterm_True = new ArrayList<>(); // верный список нетерминалов
@@ -86,21 +87,28 @@ public class Main {
     private static HashMap<String, ArrayList<String>> answer = new HashMap<>();
     private static JFrame myWindow;
     private static JPanel jp_main;
-    private static JPanel jp_rule;
     private static JPanel jp_table;
     private static JPanel jp_chain;
-    private static int index = 0;
 
     public static void main(String[] args) {
-        myWindow = new JFrame("KC");
+        try {
+            for (UIManager.LookAndFeelInfo info:UIManager.getInstalledLookAndFeels()) {
+                if("Windows".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        }catch (Exception e) {
+
+        }
+        myWindow = new JFrame("Курсовая");
         myWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JMenuBar menubar = new JMenuBar();
         // создаем меню
         menubar.add(info(myWindow));
-        jp_main = new JPanel(new VerticalLayout());
-        jp_rule = new JPanel(new VerticalLayout());
+        jp_main = new JPanel();
         jp_table = new JPanel();
-        jp_chain = new JPanel(new VerticalLayout());
+        jp_chain = new JPanel();
         //Панель для ввода
         JPanel panel1 = new JPanel();
         JLabel lb_str = new JLabel("Регулярное выражение: ");
@@ -150,7 +158,6 @@ public class Main {
                 str_temp_term.add("#");
                 if (regul_Gram(jt_str.getText())) {
                     jp_main.setVisible(false);
-                    str_Temp_noterm_True.addAll(str_temp_noterm);
                     NKA();
                     DKA();
                 }
@@ -179,7 +186,7 @@ public class Main {
                     }
                 });
                 JPanel panel = new JPanel();
-                JLabel lab = new JLabel("<html><p align=\"center\">Студент 4 курса . группы ИП-613<br />Плотников А.В.</p></html>");
+                JLabel lab = new JLabel("<html><p align=\"center\">Студент 4 курса . группы ИП-613<br />Соколов К.</p></html>");
                 panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
                 panel.add(Box.createHorizontalGlue());
                 panel.add(lab);
@@ -230,7 +237,7 @@ public class Main {
                     }
                 });
                 JPanel panel = new JPanel();
-                JLabel lab = new JLabel("<html><p>Ввод производить через пробел, запрещенные символы:скобки, символы не принадлежащие латинице, не больше 1 символа<br /></p></html>");
+                JLabel lab = new JLabel("<html><p>Ввод производить без пробелов, пример цеопчик: ((a+b)(a+b))*abc<br /></p></html>");
                 panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
                 panel.add(Box.createHorizontalGlue());
                 panel.add(lab);
@@ -345,20 +352,31 @@ public class Main {
         }
 
         str_temp.add(pp.substring(rex, rex + 1) + "A");
-        System.out.println(str_temp);
 
         str_temp_noterm.add("S");
         str_temp_noterm.add("A");
-
         String ttp = "A";
         String ccc = "";
         rule.put("S", str_temp);
         str_temp = new ArrayList<>();
         boolean flag = true;
+        if (rex + 1 == pp.length()) {
+            str_temp.add("#");
+            rule.put(ttp, str_temp);
+            System.out.println("HI");
+        }
         for (int i = rex + 1; i < pp.length(); i++) {
             if (i == pp.length() - 1) {
                 str_temp.add(pp.substring(i, i + 1));
                 rule.put(ttp, str_temp);
+                for (String ss:str_temp_term) {
+                    if (pp.substring(i, i + 1).equals(ss)) {
+                        flag = false;
+                    }
+                }
+                if (flag) {
+                    str_temp_term.add(pp.substring(i, i + 1));
+                }
                 break;
             }
             for (String s: simbol) {
@@ -382,33 +400,17 @@ public class Main {
         }
         System.out.println(str_temp_noterm);
         System.out.println(str_temp_term);
+        System.out.println(rule);
+        str_Temp_noterm_True.addAll(str_temp_noterm);
         chain_Avto();
+        System.out.println(rule_True);
         return true;
 
     }
 
 
    public static boolean chain_Avto() {
-        int flag = 0;
-        for (String s: str_temp_noterm) {
-            for (String str : rule.get(s)) {
-                if(str.length() == 2) {
-                    if (check_Simbol(str.substring(0, 1), str_temp_term) && check_Simbol(str.substring(1, 2), str_temp_noterm)) {
-                        flag = 1;
-                        break;
-                    } else if (check_Simbol(str.substring(0, 1), str_temp_noterm) && check_Simbol(str.substring(1, 2), str_temp_term)) {
-                        flag = 2;
-                        break;
-                    }
-                }
-            }
-            if (flag != 0) {
-                break;
-            }
-        }
-
         ArrayList <String> temp = new ArrayList<>();
-        if (flag == 0 || flag == 1) {
             for (String s: str_temp_noterm) {
                 for (String str : rule.get(s)) {
                     if (str.length() > 2) {
@@ -464,63 +466,15 @@ public class Main {
                         return false;
                     } else if (str.length() == 1 && check_Simbol(str.substring(0, 1), str_temp_noterm)) {
                         return false;
-                    } else {
+                    }else if (str.length() == 1 && check_Simbol(str.substring(0, 1), str_temp_term)) {
+                        temp.add(str + "T");
+                    }else {
                         temp.add(str);
                     }
                 }
                 rule_True.put(s, temp);
                 temp = new ArrayList<>();
             }
-
-        } else {
-            for (String s: str_temp_noterm) {
-                for (String str : rule.get(s)) {
-                    if (str.length() > 2) {
-                        if (str.length() - countChar(str) == 0) {
-                            String s_temp_nt = find_Simbol();
-                            String s_temp_nt1 = "";
-                            temp.add(s_temp_nt + str.substring(str.length() - 1));
-                            ArrayList <String> ss = new ArrayList<>();
-                            for (int i = str.length() - 2; i > 0; i-- ) {
-                                s_temp_nt1 = find_Simbol();
-                                ss.add(s_temp_nt1 + str.substring(i, i + 1));
-                                rule_True.put(s_temp_nt, ss);
-                                s_temp_nt = s_temp_nt1;
-                                ss = new ArrayList<>();
-                            }
-                            ss.add("T" + str.substring(0, 1));
-                            rule_True.put(s_temp_nt, ss);
-                        } else {
-                            return false;
-                        }
-                    } else if (str.length() == 2 && check_Simbol(str.substring(0, 1), str_temp_term) && check_Simbol(str.substring(1, 2), str_temp_term)) {
-                        String s_temp_nt = find_Simbol();
-                        String s_temp_nt1 = "";
-                        temp.add(s_temp_nt + str.substring(str.length() - 1));
-                        ArrayList <String> ss = new ArrayList<>();
-                        for (int i = str.length() - 2; i > 0; i-- ) {
-                            s_temp_nt1 = find_Simbol();
-                            ss.add(s_temp_nt1 + str.substring(i, i + 1));
-                            rule_True.put(s_temp_nt, ss);
-                            s_temp_nt = s_temp_nt1;
-                            ss = new ArrayList<>();
-                        }
-                        ss.add("T" + str.substring(0, 1));
-                        rule_True.put(s_temp_nt, ss);
-                    } else if (str.length() == 2 && check_Simbol(str.substring(0, 1), str_temp_noterm) && check_Simbol(str.substring(1, 2), str_temp_noterm)) {
-                        return false;
-                    } else if (str.length() == 2 && check_Simbol(str.substring(0, 1), str_temp_term) && check_Simbol(str.substring(1, 2), str_temp_noterm)) {
-                        return false;
-                    } else if (str.length() == 1 && check_Simbol(str.substring(0, 1), str_temp_noterm)) {
-                        return false;
-                    } else {
-                        temp.add(str);
-                    }
-                }
-                rule_True.put(s, temp);
-                temp = new ArrayList<>();
-            }
-        }
         temp = new ArrayList<>();
         temp.add("#");
         rule_True.put("T", temp);
@@ -790,7 +744,7 @@ public class Main {
                                 }
                             }
                         }
-                        textArea.append( pt + "ЦЕПОЧКА ПОЛУЧЕНА \n");
+                        textArea.append( pt + "конец генерации \n");
                         textArea.append(DKA_check(str));
                         pt = new String();
                     }
@@ -966,7 +920,7 @@ public class Main {
             JOptionPane.showMessageDialog(myWindow, "ЦЕПОЧКА НЕВОЗМОЖНА");
             return "ERROR";
         }
-        return s + "ЦЕПОЧА ВЕРНАЯ \n";
+        return s + "цепочка верна \n";
     }
 
 }
